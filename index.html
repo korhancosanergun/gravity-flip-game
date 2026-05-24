@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0a0a1a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Gravity Flip 3D</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="hud-level">Level 1</div>
+      <div id="hud-flips">Flips: 0</div>
+    </div>
+
+    <!-- Center message (die / win) -->
+    <div id="hud-message"></div>
+
+    <!-- Gravity indicator -->
+    <div id="gravity-indicator">
+      <div id="gravity-arrow">&#x2193;</div>
+      <div id="gravity-label">DOWN</div>
+    </div>
+
+    <!-- On-screen arrow buttons for mobile -->
+    <div id="touch-controls">
+      <div id="tc-top">
+        <button class="tc-btn" data-dir="up">&#x25B2;</button>
+      </div>
+      <div id="tc-mid">
+        <button class="tc-btn" data-dir="left">&#x25C4;</button>
+        <div id="tc-center"></div>
+        <button class="tc-btn" data-dir="right">&#x25BA;</button>
+      </div>
+      <div id="tc-bot">
+        <button class="tc-btn" data-dir="down">&#x25BC;</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
