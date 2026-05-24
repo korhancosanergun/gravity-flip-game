@@ -8,27 +8,40 @@ const HD = TILE_DEPTH / 2;
 
 // Shared geometry/material for performance
 const solidGeo = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, TILE_DEPTH);
-const solidMat = new THREE.MeshPhongMaterial({
-  color:   COLORS.TILE_SOLID,
-  emissive: COLORS.TILE_SOLID_EMISSIVE,
-  shininess: 40,
+const solidMat = new THREE.MeshStandardMaterial({
+  color:              COLORS.TILE_SOLID,
+  emissive:           COLORS.TILE_SOLID_EMISSIVE,
+  emissiveIntensity:  0.5,
+  metalness:          0.75,
+  roughness:          0.25,
+});
+
+// Edge lines — highlight the slab perimeter
+const solidEdges    = new THREE.EdgesGeometry(solidGeo);
+const solidLineMat  = new THREE.LineBasicMaterial({
+  color:   0x4488cc,
+  transparent: true,
+  opacity: 0.45,
 });
 
 const spikeGeo = new THREE.ConeGeometry(H * 0.45, TILE_SIZE * 0.85, 4);
-const spikeMat = new THREE.MeshPhongMaterial({
-  color:   COLORS.TILE_SPIKE,
-  emissive: COLORS.TILE_SPIKE_EMISSIVE,
-  shininess: 60,
+const spikeMat = new THREE.MeshStandardMaterial({
+  color:             COLORS.TILE_SPIKE,
+  emissive:          COLORS.TILE_SPIKE_EMISSIVE,
+  emissiveIntensity: 0.65,
+  metalness:         0.55,
+  roughness:         0.35,
 });
 
 const goalGeo = new THREE.OctahedronGeometry(H * 0.7);
-const goalMat = new THREE.MeshPhongMaterial({
-  color:   COLORS.TILE_GOAL,
-  emissive: COLORS.TILE_GOAL_EMISSIVE,
-  emissiveIntensity: 0.6,
-  transparent: true,
-  opacity: 0.9,
-  shininess: 100,
+const goalMat = new THREE.MeshStandardMaterial({
+  color:             COLORS.TILE_GOAL,
+  emissive:          COLORS.TILE_GOAL_EMISSIVE,
+  emissiveIntensity: 0.8,
+  metalness:         0.3,
+  roughness:         0.2,
+  transparent:       true,
+  opacity:           0.9,
 });
 
 export class Tile {
@@ -54,6 +67,10 @@ export class Tile {
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
         scene.add(this.mesh);
+
+        // Thin edge lines around each slab for a grid-panel look
+        const lines = new THREE.LineSegments(solidEdges, solidLineMat);
+        this.mesh.add(lines);
 
         this.body = new CANNON.Body({ mass: 0 });
         this.body.addShape(new CANNON.Box(new CANNON.Vec3(H, H, HD)));
@@ -101,7 +118,7 @@ export class Tile {
       this.mesh.rotation.x = elapsed * 1.2;
       this.mesh.rotation.y = elapsed * 0.8;
       const pulse = 0.5 + Math.sin(elapsed * 3) * 0.3;
-      (this.mesh.material as THREE.MeshPhongMaterial).emissiveIntensity = pulse;
+      (this.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
     }
     if (this.type === 4) {
       this.mesh.rotation.y = elapsed * 2;

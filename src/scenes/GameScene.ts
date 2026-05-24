@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { PhysicsWorld }  from '../systems/PhysicsWorld';
 import { GravitySystem } from '../systems/GravitySystem';
-import { InputManager }  from '../systems/InputManager';
+import { InputManager } from '../systems/InputManager';
+import type { ControlMode } from '../systems/InputManager';
 import { LevelManager } from '../systems/LevelManager';
 import type { LevelBounds } from '../systems/LevelManager';
 import { Ball }          from '../objects/Ball';
@@ -20,16 +21,19 @@ export class GameScene {
   private ball:          Ball | null = null;
   private bounds:        LevelBounds | null = null;
 
-  private clock          = new THREE.Clock();
-  private elapsed        = 0;
-  private levelIndex     = 0;
-  private flipCount      = 0;
+  private timer           = new THREE.Timer();
+  private elapsed         = 0;
+  private levelIndex      = 0;
+  private flipCount       = 0;
+  private totalFlipCount  = 0;
   private status: GameStatus = 'playing';
   private onStatus: StatusCallback;
   private restartTimer: ReturnType<typeof setTimeout> | null = null;
+  private controlMode: ControlMode;
 
-  constructor(aspect: number, onStatus: StatusCallback) {
-    this.onStatus = onStatus;
+  constructor(aspect: number, onStatus: StatusCallback, controlMode: ControlMode = 'touch') {
+    this.onStatus    = onStatus;
+    this.controlMode = controlMode;
 
     // ── Scene ────────────────────────────────────────────────
     this.scene = new THREE.Scene();
@@ -57,9 +61,9 @@ export class GameScene {
 
     // ── Systems ──────────────────────────────────────────────
     this.physics      = new PhysicsWorld();
-    this.gravity      = new GravitySystem(this.physics);
-    this.levelManager = new LevelManager(this.scene, this.physics.world);
-    new InputManager((dir: GravityDirection) => this.onFlip(dir));
+    this.gravity       = new GravitySystem(this.physics);
+    this.levelManager  = new LevelManager(this.scene, this.physics.world);
+    new InputManager((dir: GravityDirection) => this.onFlip(dir), this.controlMode);
 
     this.loadLevel(0);
   }
@@ -125,6 +129,7 @@ export class GameScene {
   private handleWin(): void {
     if (this.status !== 'playing') return;
     this.status = 'won';
+    this.totalFlipCount += this.flipCount; // accumulate across levels
     this.onStatus('won', this.flipCount, this.levelIndex + 1);
 
     const next = this.levelIndex + 1;
@@ -132,14 +137,15 @@ export class GameScene {
       this.restartTimer = setTimeout(() => this.loadLevel(next), 2200);
     } else {
       this.restartTimer = setTimeout(() => {
-        this.onStatus('allComplete', this.flipCount, this.levelIndex + 1);
+        this.onStatus('allComplete', this.totalFlipCount, this.levelIndex + 1);
       }, 2200);
     }
   }
 
   // ── Main update ───────────────────────────────────────────
-  update(): void {
-    const dt       = this.clock.getDelta();
+  update(timestamp: number = 0): void {
+    this.timer.update(timestamp);
+    const dt       = this.timer.getDelta();
     this.elapsed  += dt;
 
     // Physics

@@ -6,42 +6,267 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#0a0a1a" />
+    <meta name="theme-color" content="#06070e" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Gravity Flip 3D</title>
+    <!-- Space Grotesk — technical, clean, modern -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!-- 3D canvas mounts here -->
     <div id="app"></div>
 
-    <!-- HUD -->
-    <div id="hud">
-      <div id="hud-level">Level 1</div>
-      <div id="hud-flips">Flips: 0</div>
+    <!-- ── Floating physics equations (always visible, mix-blend-mode) ── -->
+    <div id="physics-equations" aria-hidden="true"></div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         CONTROL MODE PICKER  (shown on first mobile launch)
+         ════════════════════════════════════════════════════════════════ -->
+    <div id="control-picker" class="hidden" role="dialog" aria-modal="true" aria-label="Choose controls">
+      <div class="cp-card">
+
+        <h2 class="cp-title">HOW DO YOU<br>WANT TO PLAY?</h2>
+        <p class="cp-sub">Gravity is in your hands — literally</p>
+
+        <div class="cp-options">
+
+          <!-- ── TOUCH D-PAD ── -->
+          <button class="cp-option" id="cp-touch-btn" data-mode="touch">
+            <div class="cp-preview" aria-hidden="true">
+              <div class="cp-dpad">
+                <div class="cp-dpad-btn cp-dpad-up">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="cp-dpad-row">
+                  <div class="cp-dpad-btn cp-dpad-left">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                  <div class="cp-dpad-center"></div>
+                  <div class="cp-dpad-btn cp-dpad-right">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                </div>
+                <div class="cp-dpad-btn cp-dpad-down">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+              </div>
+            </div>
+            <span class="cp-opt-name">D‑PAD</span>
+            <span class="cp-opt-desc">Tap arrows to flip gravity</span>
+            <div class="cp-badge cp-badge-classic">CLASSIC</div>
+          </button>
+
+          <!-- ── GYROSCOPE ── -->
+          <button class="cp-option cp-option-gyro" id="cp-gyro-btn" data-mode="sensor">
+            <div class="cp-preview" aria-hidden="true">
+              <div class="cp-gyro-wrap">
+                <div class="cp-phone">
+                  <div class="cp-phone-notch"></div>
+                  <div class="cp-phone-screen">
+                    <div class="cp-phone-arrow">↓</div>
+                  </div>
+                </div>
+                <div class="cp-gyro-orbit">
+                  <div class="cp-gyro-dot"></div>
+                </div>
+              </div>
+            </div>
+            <span class="cp-opt-name">GYROSCOPE</span>
+            <span class="cp-opt-desc">Tilt device to flip gravity</span>
+            <div class="cp-badge cp-badge-new">NEW</div>
+          </button>
+
+        </div>
+
+        <!-- Gyro error / not-available message -->
+        <p id="cp-gyro-error" class="cp-gyro-error" style="display:none"></p>
+
+        <!-- Remember toggle -->
+        <label class="cp-remember">
+          <div class="cp-toggle-wrap">
+            <input type="checkbox" id="cp-remember" checked />
+            <div class="cp-toggle-track">
+              <div class="cp-toggle-thumb"></div>
+            </div>
+          </div>
+          <span>Remember my choice</span>
+        </label>
+
+        <p class="cp-footer">You can always reset in Settings → clear site data</p>
+      </div>
     </div>
 
-    <!-- Center message (die / win) -->
-    <div id="hud-message"></div>
+    <!-- ════════════════════════════════════════════════════════════════
+         SENSOR MODE BADGE  (shown in-game when gyro is active)
+         ════════════════════════════════════════════════════════════════ -->
+    <div id="sensor-badge" class="hidden" aria-label="Gyroscope active">
+      <div class="sb-ring" aria-hidden="true"></div>
+      <div class="sb-content">
+        <span class="sb-icon" aria-hidden="true">◉</span>
+        <span class="sb-label">GYRO</span>
+      </div>
+      <button id="sb-calibrate" class="sb-action" title="Tap to recalibrate" aria-label="Recalibrate sensor">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span>CAL</span>
+      </button>
+      <button id="sb-switch" class="sb-action sb-action-switch" title="Switch to touch controls" aria-label="Switch to touch controls">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <span>D-PAD</span>
+      </button>
+    </div>
+    <div id="auth-overlay" role="dialog" aria-modal="true" aria-label="Sign in">
 
-    <!-- Gravity indicator -->
+      <div class="auth-card">
+        <!-- Logo -->
+        <div class="auth-logo">
+          <span class="auth-logo-icon" aria-hidden="true">⊗</span>
+          <span class="auth-logo-text">GRAVITY FLIP</span>
+        </div>
+        <p class="auth-tagline">Master the physics of gravity</p>
+
+        <!-- Tabs -->
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" data-tab="login"    role="tab" aria-selected="true">Login</button>
+          <button class="auth-tab"        data-tab="register" role="tab" aria-selected="false">Register</button>
+        </div>
+
+        <!-- Login form -->
+        <form id="login-form" class="auth-form" autocomplete="on">
+          <div class="field-group">
+            <input id="login-username" type="text"     name="username" placeholder="Username"
+                   autocomplete="username" minlength="3" maxlength="20" required />
+          </div>
+          <div class="field-group">
+            <input id="login-password" type="password" name="password" placeholder="Password"
+                   autocomplete="current-password" minlength="6" required />
+          </div>
+          <p class="auth-error" id="login-error" role="alert"></p>
+          <button type="submit" class="auth-submit">LOGIN</button>
+        </form>
+
+        <!-- Register form (hidden by default) -->
+        <form id="register-form" class="auth-form hidden" autocomplete="on">
+          <div class="field-group">
+            <input id="reg-username" type="text"     name="username" placeholder="Choose username"
+                   autocomplete="username" minlength="3" maxlength="20"
+                   pattern="[a-zA-Z0-9_]+" title="Letters, numbers and underscores only" required />
+          </div>
+          <div class="field-group">
+            <input id="reg-password" type="password" name="password" placeholder="Create password"
+                   autocomplete="new-password" minlength="6" required />
+          </div>
+          <p class="auth-error" id="reg-error" role="alert"></p>
+          <button type="submit" class="auth-submit">CREATE ACCOUNT</button>
+        </form>
+
+        <!-- Guest option -->
+        <div class="auth-divider"><span>or</span></div>
+        <button id="guest-btn" class="guest-play" type="button">Play as Guest</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         LEADERBOARD OVERLAY
+         ════════════════════════════════════════════════════════════════ -->
+    <div id="leaderboard-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Leaderboard">
+      <div class="lb-card">
+        <button id="lb-close" class="lb-close" aria-label="Close leaderboard">✕</button>
+        <h2 class="lb-title">
+          <span class="lb-title-icon" aria-hidden="true">🏆</span>
+          LEADERBOARD
+        </h2>
+        <div class="lb-header-row">
+          <span>RANK</span><span>PLAYER</span><span>LEVELS</span><span>FLIPS</span>
+        </div>
+        <div id="lb-list"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         HUD  (shown during gameplay)
+         ════════════════════════════════════════════════════════════════ -->
+    <header id="hud">
+      <!-- Level pill -->
+      <div id="hud-level-pill">
+        <span class="pill-accent" id="hud-level">01</span>
+        <div class="pill-divider"></div>
+        <span class="pill-label" id="hud-level-name">First Steps</span>
+      </div>
+
+      <!-- Flips pill -->
+      <div id="hud-flips-pill">
+        <svg class="pill-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M10 3C6.13 3 3 6.13 3 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M10 17C13.87 17 17 13.87 17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M10 3L7.5 5.5M10 3L12.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 17L12.5 14.5M10 17L7.5 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="pill-accent" id="hud-flips">0</span>
+        <span class="pill-par">/<span id="hud-par">1</span></span>
+      </div>
+
+      <!-- User + Leaderboard pill -->
+      <div id="hud-right-pill">
+        <span id="hud-user" class="pill-label">GUEST</span>
+        <button id="ctrl-btn" class="lb-hud-btn" aria-label="Change controls" title="Change controls">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="lb-btn" class="lb-hud-btn hidden" aria-label="Show leaderboard" title="Leaderboard">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="2"  y="10" width="4" height="8" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="8"  y="6"  width="4" height="12" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="14" y="2"  width="4" height="16" rx="1" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Gravity indicator (bottom-left) ──────── -->
     <div id="gravity-indicator">
-      <div id="gravity-arrow">&#x2193;</div>
-      <div id="gravity-label">DOWN</div>
+      <div id="gravity-ring">
+        <div id="gravity-arrow">↓</div>
+      </div>
+      <span id="gravity-label">DOWN</span>
     </div>
 
-    <!-- On-screen arrow buttons for mobile -->
-    <div id="touch-controls">
-      <div id="tc-top">
-        <button class="tc-btn" data-dir="up">&#x25B2;</button>
-      </div>
-      <div id="tc-mid">
-        <button class="tc-btn" data-dir="left">&#x25C4;</button>
-        <div id="tc-center"></div>
-        <button class="tc-btn" data-dir="right">&#x25BA;</button>
-      </div>
-      <div id="tc-bot">
-        <button class="tc-btn" data-dir="down">&#x25BC;</button>
-      </div>
+    <!-- ── Center message overlay ────────────────── -->
+    <div id="hud-message" aria-live="polite">
+      <div id="msg-icon"></div>
+      <div id="msg-title"></div>
+      <div id="msg-sub"></div>
     </div>
+
+    <!-- ── Touch D-pad (bottom-center) ───────────── -->
+    <nav id="touch-controls" aria-label="Gravity controls">
+      <button class="tc-btn" data-dir="up" aria-label="Flip gravity up">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="tc-row">
+        <button class="tc-btn" data-dir="left" aria-label="Flip gravity left">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="tc-center" aria-hidden="true"></div>
+        <button class="tc-btn" data-dir="right" aria-label="Flip gravity right">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <button class="tc-btn" data-dir="down" aria-label="Flip gravity down">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </nav>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
