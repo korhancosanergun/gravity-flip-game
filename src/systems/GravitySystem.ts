@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { GravityDirection } from '../utils/Types';
 import { GRAVITY_STRENGTH } from '../utils/Constants';
 import { PhysicsWorld } from './PhysicsWorld';
+import { t } from '../i18n';
 
 const GRAVITY_VECTORS: Record<GravityDirection, [number, number, number]> = {
   down:  [0, -GRAVITY_STRENGTH, 0],
@@ -21,9 +22,6 @@ const CAMERA_UP: Record<GravityDirection, THREE.Vector3> = {
 const ARROW_CHAR: Record<GravityDirection, string> = {
   down: '↓', up: '↑', left: '←', right: '→',
 };
-const DIR_LABEL: Record<GravityDirection, string> = {
-  down: 'DOWN', up: 'UP', left: 'LEFT', right: 'RIGHT',
-};
 
 export class GravitySystem {
   private physics: PhysicsWorld;
@@ -35,6 +33,7 @@ export class GravitySystem {
 
   constructor(physics: PhysicsWorld) {
     this.physics = physics;
+    window.addEventListener('localechange', () => this.updateIndicator(this._dir));
   }
 
   get direction(): GravityDirection {
@@ -70,6 +69,9 @@ export class GravitySystem {
     const arrow = document.getElementById('gravity-arrow');
     const label = document.getElementById('gravity-label');
     if (arrow) arrow.textContent = ARROW_CHAR[dir];
-    if (label) label.textContent = DIR_LABEL[dir];
+    if (label) {
+      const labelKey = ({ down: 'gravityDown', up: 'gravityUp', left: 'gravityLeft', right: 'gravityRight' } as const)[dir];
+      label.textContent = t(labelKey);
+    }
   }
 }

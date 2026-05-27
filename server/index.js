@@ -5,6 +5,7 @@ const cors       = require('cors');
 
 const authRoutes        = require('./routes/auth');
 const leaderboardRoutes = require('./routes/leaderboard');
+const versionRoutes     = require('./routes/version');
 
 const app       = express();
 const PORT      = process.env.PORT      || 3001;
@@ -19,6 +20,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api',      leaderboardRoutes);
+app.use('/api',      versionRoutes);
 
 // Generic error handler
 app.use((err, _req, res, _next) => {

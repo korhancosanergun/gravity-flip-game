@@ -6,6 +6,7 @@ import { LEVELS } from './levels/levels';
 import type { ApiClient } from './api/client';
 import { showLeaderboard } from './ui';
 import type { ControlMode } from './systems/InputManager';
+import { t, tf } from './i18n';
 
 export class Game {
   private renderer:  THREE.WebGLRenderer;
@@ -48,9 +49,14 @@ export class Game {
 
     // ── HUD — username chip ───────────────────────────────
     const userChip = document.getElementById('hud-user');
+    const logoutBtn  = document.getElementById('logout-btn');
     if (userChip) {
-      const u = api.user;
-      userChip.textContent = u ? u.username : 'GUEST';
+    const u = api.user;
+      userChip.textContent = u ? u.username : t('guest');
+      if (!u) {
+        window.addEventListener('localechange', () => { userChip.textContent = t('guest'); });
+      }
+      if (u && logoutBtn) logoutBtn.classList.remove('hidden');
     }
 
     // ── Leaderboard button ────────────────────────────────
@@ -114,18 +120,19 @@ export class Game {
     // Status messages
     switch (status) {
       case 'dead':
-        this.showMsg('💀', 'TRY AGAIN', 'GRAVITY IS CRUEL', 'var(--c-red)');
+        this.showMsg('💀', t('msgDeadTitle'), t('msgDeadSub'), 'var(--c-red)');
         break;
       case 'won':
         this.showMsg(
           '⭐',
-          'LEVEL CLEAR',
-          flips <= par ? `PERFECT · ${flips} FLIP${flips !== 1 ? 'S' : ''}` : `${flips} FLIPS`,
+          t('msgWonTitle'),
+          flips <= par ? tf('msgWonPerfect', flips) : tf('msgWonFlips', flips),
           'var(--c-mint)',
         );
+        this.api.submitScore(level, flips);
         break;
       case 'allComplete':
-        this.showMsg('🏆', 'COMPLETE', 'YOU MASTERED GRAVITY', 'var(--c-amber)');
+        this.showMsg('🏆', t('msgAllCompleteTitle'), t('msgAllCompleteSub'), 'var(--c-amber)');
         // Submit score then show leaderboard after a short delay
         this.api.submitScore(LEVELS.length, flips).then(() => {
           setTimeout(() => showLeaderboard(this.api), 3000);

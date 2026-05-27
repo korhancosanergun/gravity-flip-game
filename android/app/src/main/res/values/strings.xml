@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gravity Flip 3D</string>
+    <string name="title_activity_main">Gravity Flip 3D</string>
+    <string name="package_name">com.gravityflip.game</string>
+    <string name="custom_url_scheme">com.gravityflip.game</string>
+</resources>

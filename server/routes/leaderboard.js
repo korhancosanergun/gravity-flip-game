@@ -44,7 +44,7 @@ router.post('/score', authMiddleware, async (req, res) => {
     if (typeof levelsCompleted !== 'number' || typeof totalFlips !== 'number')
       return res.status(400).json({ error: 'Invalid score data' });
 
-    if (levelsCompleted < 0 || levelsCompleted > 5 || totalFlips < 0 || totalFlips > 9999)
+    if (levelsCompleted < 0 || levelsCompleted > 100 || totalFlips < 0 || totalFlips > 99999)
       return res.status(400).json({ error: 'Score data out of range' });
 
     await Score.create({

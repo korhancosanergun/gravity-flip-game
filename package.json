@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/version.mjs",
     "build": "tsc && vite build",
+    "postbuild": "node scripts/postbuild.mjs",
     "preview": "vite preview",
     "cap:sync": "cap sync",
     "cap:android": "cap open android",

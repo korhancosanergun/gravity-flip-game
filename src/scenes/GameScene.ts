@@ -7,7 +7,7 @@ import { LevelManager } from '../systems/LevelManager';
 import type { LevelBounds } from '../systems/LevelManager';
 import { Ball }          from '../objects/Ball';
 import type { GravityDirection, GameStatus } from '../utils/Types';
-import { FLIP_LERP_SPEED, OUT_OF_BOUNDS_MARGIN } from '../utils/Constants';
+import { FLIP_LERP_SPEED, OUT_OF_BOUNDS_MARGIN, CAMERA_FOV } from '../utils/Constants';
 
 export type StatusCallback = (status: GameStatus, flips: number, levelNum: number) => void;
 
@@ -30,10 +30,12 @@ export class GameScene {
   private onStatus: StatusCallback;
   private restartTimer: ReturnType<typeof setTimeout> | null = null;
   private controlMode: ControlMode;
+  private aspect: number;
 
   constructor(aspect: number, onStatus: StatusCallback, controlMode: ControlMode = 'touch') {
     this.onStatus    = onStatus;
     this.controlMode = controlMode;
+    this.aspect      = aspect;
 
     // ── Scene ────────────────────────────────────────────────
     this.scene = new THREE.Scene();
@@ -78,7 +80,7 @@ export class GameScene {
 
     this.gravity.reset();
 
-    this.bounds = this.levelManager.load(index);
+    this.bounds = this.levelManager.load(index, this.aspect);
 
     // Remove old ball
     if (this.ball) {
@@ -101,9 +103,28 @@ export class GameScene {
   }
 
   private positionCamera(b: LevelBounds): void {
-    this.camera.position.set(b.centerX, b.centerY, b.cameraZ);
+    let lookY = b.centerY;
+
+    if (this.controlMode === 'touch') {
+      // Center the level in the visible game area (between HUD bottom and D-pad top)
+      // so it doesn't sit behind the D-pad overlay.
+      const screenH  = window.innerHeight;
+      const hudEl    = document.getElementById('hud');
+      const ctrlEl   = document.getElementById('touch-controls');
+      const hudBot   = hudEl  ? hudEl.getBoundingClientRect().bottom : 56;
+      const ctrlRect = ctrlEl ? ctrlEl.getBoundingClientRect() : null;
+      const ctrlTop  = (ctrlRect && ctrlRect.height > 0) ? ctrlRect.top : screenH - 190;
+      const effectiveCenterPx = (hudBot + ctrlTop) / 2;
+      const pixelShift = (screenH / 2) - effectiveCenterPx; // + means effective center is above screen center
+      const tanHalf  = Math.tan((CAMERA_FOV * Math.PI / 180) / 2);
+      const worldH   = 2 * b.cameraZ * tanHalf;
+      // Shift lookAt DOWN (negative Y) so the level drifts UP on screen into the game area.
+      lookY = b.centerY - (pixelShift / screenH) * worldH;
+    }
+
+    this.camera.position.set(b.centerX, lookY, b.cameraZ);
     this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(b.centerX, b.centerY, 0);
+    this.camera.lookAt(b.centerX, lookY, 0);
     this.gravity.currentCameraUp.set(0, 1, 0);
     this.gravity.targetCameraUp.set(0, 1, 0);
   }
@@ -130,7 +151,7 @@ export class GameScene {
     if (this.status !== 'playing') return;
     this.status = 'won';
     this.totalFlipCount += this.flipCount; // accumulate across levels
-    this.onStatus('won', this.flipCount, this.levelIndex + 1);
+    this.onStatus('won', this.totalFlipCount, this.levelIndex + 1);
 
     const next = this.levelIndex + 1;
     if (next < LevelManager.totalLevels) {
@@ -178,8 +199,14 @@ export class GameScene {
   }
 
   resize(aspect: number): void {
+    this.aspect = aspect;
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+    // Recompute camera distance for new aspect ratio
+    if (this.bounds) {
+      this.bounds = this.levelManager.recomputeBoundsForAspect(aspect);
+      this.positionCamera(this.bounds);
+    }
   }
 
   // ── Star field ────────────────────────────────────────────

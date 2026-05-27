@@ -16,6 +16,8 @@ export class LevelManager {
   private tiles: Tile[] = [];
   private scene: THREE.Scene;
   private physicsWorld: CANNON.World;
+  private lastRows = 0;
+  private lastCols = 0;
 
   currentLevel: LevelData | null = null;
   spawnX = 0;
@@ -30,7 +32,7 @@ export class LevelManager {
     this.physicsWorld = physicsWorld;
   }
 
-  load(index: number): LevelBounds {
+  load(index: number, aspect = 1): LevelBounds {
     this.clear();
     const data = LEVELS[index];
     if (!data) throw new Error(`Level ${index} not found`);
@@ -38,6 +40,8 @@ export class LevelManager {
 
     const rows = data.grid.length;
     const cols = data.grid[0].length;
+    this.lastRows = rows;
+    this.lastCols = cols;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -56,10 +60,15 @@ export class LevelManager {
       }
     }
 
-    return this.computeBounds(rows, cols);
+    return this.computeBounds(rows, cols, aspect);
   }
 
-  private computeBounds(rows: number, cols: number): LevelBounds {
+  /** Call this when the viewport is resized to recompute camera distance. */
+  recomputeBoundsForAspect(aspect: number): LevelBounds {
+    return this.computeBounds(this.lastRows, this.lastCols, aspect);
+  }
+
+  private computeBounds(rows: number, cols: number, aspect = 1): LevelBounds {
     const minX = -TILE_SIZE / 2;
     const maxX = (cols - 1) * TILE_SIZE + TILE_SIZE / 2;
     const minY = -(rows - 1) * TILE_SIZE - TILE_SIZE / 2;
@@ -71,7 +80,16 @@ export class LevelManager {
     const spanX = maxX - minX + 2;
     const spanY = maxY - minY + 2;
     const fovRad = (CAMERA_FOV * Math.PI) / 180;
-    const cameraZ = (Math.max(spanX, Math.abs(spanY)) / 2) / Math.tan(fovRad / 2) * 1.25;
+    const tanHalfFov = Math.tan(fovRad / 2);
+
+    // Perspective camera: vFOV = fovRad, hFOV = atan(tan(vFOV/2)*aspect)*2
+    // Z to fit height: halfY / tan(vFOV/2)
+    // Z to fit width:  halfX / (tan(vFOV/2) * aspect)
+    const zForHeight = (spanY / 2) / tanHalfFov;
+    const zForWidth  = (spanX / 2) / (tanHalfFov * Math.max(aspect, 0.1));
+    // 1.05 padding: span already includes +2 world-unit margin on each side;
+    // just enough breathing room without pushing camera back on portrait mobile.
+    const cameraZ    = Math.max(zForHeight, zForWidth) * 1.05;
 
     return { minX, maxX, minY, maxY, centerX, centerY, cameraZ };
   }

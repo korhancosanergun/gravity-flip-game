@@ -1,6 +1,7 @@
 import type { ApiClient, LeaderboardEntry } from './api/client';
 import { SensorInput } from './systems/SensorInput';
 import type { ControlMode } from './systems/InputManager';
+import { t } from './i18n';
 
 // ── Auth Screen ────────────────────────────────────────────────────────────
 
@@ -34,15 +35,15 @@ export function initAuthScreen(api: ApiClient, onReady: () => void): void {
     const password = (document.getElementById('login-password') as HTMLInputElement).value;
     const btn      = loginForm.querySelector<HTMLButtonElement>('.auth-submit')!;
     btn.disabled   = true;
-    btn.textContent = 'LOGGING IN…';
+    btn.textContent = t('btnLoggingIn');
     try {
       await api.login(username, password);
       overlay.classList.add('hidden');
       onReady();
     } catch (err: unknown) {
-      loginErr.textContent = err instanceof Error ? err.message : 'Login failed';
+      loginErr.textContent = err instanceof Error ? err.message : t('errLoginFailed');
       btn.disabled    = false;
-      btn.textContent = 'LOGIN';
+      btn.textContent = t('btnLogin');
     }
   });
 
@@ -54,15 +55,15 @@ export function initAuthScreen(api: ApiClient, onReady: () => void): void {
     const password = (document.getElementById('reg-password') as HTMLInputElement).value;
     const btn      = regForm.querySelector<HTMLButtonElement>('.auth-submit')!;
     btn.disabled   = true;
-    btn.textContent = 'CREATING…';
+    btn.textContent = t('btnCreating');
     try {
       await api.register(username, password);
       overlay.classList.add('hidden');
       onReady();
     } catch (err: unknown) {
-      regErr.textContent = err instanceof Error ? err.message : 'Registration failed';
+      regErr.textContent = err instanceof Error ? err.message : t('errRegFailed');
       btn.disabled    = false;
-      btn.textContent = 'CREATE ACCOUNT';
+      btn.textContent = t('btnCreateAccount');
     }
   });
 
@@ -81,12 +82,12 @@ export async function showLeaderboard(api: ApiClient): Promise<void> {
   const closeBtn = document.getElementById('lb-close')!;
 
   overlay.classList.remove('hidden');
-  listEl.innerHTML = '<div class="lb-loading">Loading…</div>';
+  listEl.innerHTML = `<div class="lb-loading">${t('lbLoading')}</div>`;
 
   const entries = await api.getLeaderboard();
 
   if (entries.length === 0) {
-    listEl.innerHTML = '<div class="lb-empty">No scores yet — be the first!</div>';
+    listEl.innerHTML = `<div class="lb-empty">${t('lbEmpty')}</div>`;
   } else {
     const medals = ['🥇', '🥈', '🥉'];
     listEl.innerHTML = entries
@@ -94,8 +95,8 @@ export async function showLeaderboard(api: ApiClient): Promise<void> {
         <div class="lb-row${e.rank <= 3 ? ' lb-top' : ''}">
           <span class="lb-rank">${e.rank <= 3 ? medals[e.rank - 1] : `#${e.rank}`}</span>
           <span class="lb-name">${esc(e.username)}</span>
-          <span class="lb-levels">${e.levelsCompleted}<span class="lb-dim">/5</span></span>
-          <span class="lb-flips">${e.totalFlips}<span class="lb-dim"> flips</span></span>
+          <span class="lb-levels">${e.levelsCompleted}<span class="lb-dim">/100</span></span>
+          <span class="lb-flips">${e.totalFlips}<span class="lb-dim"> ${t('lbFlips')}</span></span>
         </div>
       `)
       .join('');
@@ -145,7 +146,7 @@ export function showControlPicker(): Promise<ControlMode> {
     if (!SensorInput.isAvailable()) {
       gyroBtn.setAttribute('disabled', 'true');
       gyroBtn.setAttribute('aria-disabled', 'true');
-      gyroErr.textContent = 'Sensor not available on this device';
+      gyroErr.textContent = t('cpSensorUnavail');
       gyroErr.style.display = 'block';
     }
 
@@ -166,12 +167,12 @@ export function showControlPicker(): Promise<ControlMode> {
       gyroBtn.removeAttribute('aria-busy');
 
       if (status === 'denied') {
-        gyroErr.textContent = 'Sensor permission denied. Enable it in Settings.';
+        gyroErr.textContent = t('cpSensorDenied');
         gyroErr.style.display = 'block';
         return;
       }
       if (status === 'unavailable') {
-        gyroErr.textContent = 'Sensor not available on this device.';
+        gyroErr.textContent = t('cpSensorUnavail');
         gyroErr.style.display = 'block';
         return;
       }

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy / Gizlilik Politikası — Gravity Flip 3D</title>
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #06070e;
+      --surface: rgba(255 255 255 / 0.045);
+      --border:  rgba(255 255 255 / 0.09);
+      --text:    #dde4ff;
+      --muted:   rgba(221 228 255 / 0.42);
+      --blue:    #5b8cff;
+      --mint:    #1bf7b4;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 0 1rem 4rem;
+      line-height: 1.7;
+    }
+
+    /* ── header ── */
+    .page-header {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 2.5rem 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .header-brand img { width: 36px; height: 36px; object-fit: contain; }
+    .header-brand span {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--blue);
+      text-transform: uppercase;
+    }
+
+    /* ── lang toggle ── */
+    .lang-toggle {
+      display: flex;
+      gap: 6px;
+    }
+    .lang-btn {
+      padding: 6px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lang-btn.active {
+      background: rgba(91 140 255 / 0.12);
+      border-color: rgba(91 140 255 / 0.4);
+      color: var(--blue);
+    }
+
+    /* ── content ── */
+    .content {
+      max-width: 780px;
+      margin: 0 auto;
+      padding-top: 3rem;
+    }
+
+    .lang-section { display: none; }
+    .lang-section.visible { display: block; }
+
+    h1 {
+      font-size: clamp(22px, 5vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 0.4rem;
+    }
+
+    .last-updated {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--mint);
+      margin: 2.5rem 0 0.75rem;
+    }
+
+    p { color: rgba(221 228 255 / 0.82); margin-bottom: 0.9rem; }
+
+    ul {
+      padding-left: 1.4rem;
+      margin-bottom: 0.9rem;
+    }
+    ul li {
+      color: rgba(221 228 255 / 0.82);
+      margin-bottom: 0.35rem;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .highlight-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.4rem;
+      margin: 1.2rem 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <a class="header-brand" href="/">
+      <img src="/icon.png" alt="Gravity Flip 3D" />
+      <span>Gravity Flip 3D</span>
+    </a>
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="tr">Türkçe</button>
+      <button class="lang-btn"        data-lang="en">English</button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- ══════════════════════════════ TÜRKÇE ══════════════════════════════ -->
+    <section class="lang-section visible" id="section-tr">
+      <h1>Gizlilik Politikası</h1>
+      <p class="last-updated">Son güncelleme: 27 Mayıs 2026</p>
+
+      <p>
+        <strong>Gravity Flip 3D</strong> uygulamasını kullandığınız için teşekkür ederiz.
+        Bu gizlilik politikası, oyunumuzu oynarken hangi verilerin toplandığını,
+        nasıl kullanıldığını ve haklarınızı açıklamaktadır.
+      </p>
+
+      <h2>1. Toplanan Veriler</h2>
+      <p>Uygulamamız yalnızca aşağıdaki verileri toplar:</p>
+      <ul>
+        <li><strong>Kullanıcı adı</strong> — kayıt sırasında belirlediğiniz takma ad</li>
+        <li><strong>Şifre (hash'lenmiş)</strong> — düz metin olarak hiçbir zaman saklanmaz</li>
+        <li><strong>Oyun skoru</strong> — tamamlanan seviye sayısı ve toplam hamle sayısı</li>
+      </ul>
+      <div class="highlight-box">
+        📧 e-posta, telefon numarası, konum, kimlik bilgisi gibi kişisel veriler <strong>kesinlikle toplanmaz</strong>.
+      </div>
+
+      <h2>2. Verilerin Kullanımı</h2>
+      <p>Toplanan veriler yalnızca şu amaçlarla kullanılır:</p>
+      <ul>
+        <li>Oyun oturumunuzu tanımlamak ve ilerlemeni kaydetmek</li>
+        <li>Küresel liderlik tablosunu görüntülemek</li>
+      </ul>
+      <p>Verileriniz; reklam, profil oluşturma, analitik araçlar veya üçüncü taraflarla paylaşma amacıyla <strong>kullanılmaz</strong>.</p>
+
+      <h2>3. Veri Güvenliği</h2>
+      <p>
+        Tüm veriler güvenli sunucularımızda saklanmaktadır. Şifreler bcrypt algoritmasıyla
+        hash'lenerek tutulur; düz metin şifre hiçbir aşamada saklanmaz.
+        Uygulama ile sunucu arasındaki iletişim HTTPS üzerinden şifrelenir.
+      </p>
+
+      <h2>4. Veri Saklama ve Silme</h2>
+      <p>
+        Hesabınızı ve tüm ilişkili verileri silmek istiyorsanız
+        aşağıdaki e-posta adresine talepte bulunabilirsiniz.
+        Talebiniz 7 iş günü içinde işleme alınır.
+      </p>
+
+      <h2>5. Üçüncü Taraf Hizmetler</h2>
+      <p>
+        Uygulama, Google Play Hizmetleri gibi platformlara bağımsız gizlilik politikaları
+        bulunabilecek üçüncü taraf bileşenler içerebilir. Bu politika yalnızca
+        Gravity Flip 3D'nin kendi veri işleme pratiklerini kapsar.
+      </p>
+
+      <h2>6. Çocukların Gizliliği</h2>
+      <p>
+        Uygulamamız 13 yaş altı çocuklara yönelik değildir.
+        Bilerek bu yaş grubuna ait veri toplamıyoruz.
+      </p>
+
+      <h2>7. Bu Politikadaki Değişiklikler</h2>
+      <p>
+        Bu sayfayı zaman zaman güncelleyebiliriz. Önemli değişiklikler olduğunda
+        uygulama içinde bildirim yapılacaktır. Güncel sürümü her zaman bu sayfada bulabilirsiniz.
+      </p>
+
+      <h2>8. İletişim</h2>
+      <p>Sorularınız için:</p>
+      <p>
+        <strong>Tomris Games</strong><br />
+        <a href="mailto:privacy@gravitygame.tomris.games">privacy@gravitygame.tomris.games</a><br />
+        <a href="https://gravitygame.tomris.games">gravitygame.tomris.games</a>
+      </p>
+
+      <hr />
+      <p style="font-size:13px; color: var(--muted);">
+        Bu gizlilik politikası Google Play Store gereklilikleri doğrultusunda hazırlanmıştır.
+      </p>
+    </section>
+
+    <!-- ══════════════════════════════ ENGLISH ══════════════════════════════ -->
+    <section class="lang-section" id="section-en">
+      <h1>Privacy Policy</h1>
+      <p class="last-updated">Last updated: May 27, 2026</p>
+
+      <p>
+        Thank you for playing <strong>Gravity Flip 3D</strong>.
+        This Privacy Policy explains what information we collect when you use our app,
+        how we use it, and your rights regarding that data.
+      </p>
+
+      <h2>1. Information We Collect</h2>
+      <p>We collect only the following data:</p>
+      <ul>
+        <li><strong>Username</strong> — the nickname you choose during registration</li>
+        <li><strong>Password (hashed)</strong> — never stored in plain text</li>
+        <li><strong>Game score</strong> — number of levels completed and total move count</li>
+      </ul>
+      <div class="highlight-box">
+        We do <strong>not</strong> collect email addresses, phone numbers, location data,
+        real names, or any other personally identifying information.
+      </div>
+
+      <h2>2. How We Use Your Data</h2>
+      <p>The data we collect is used solely to:</p>
+      <ul>
+        <li>Identify your game session and save your progress</li>
+        <li>Display the global leaderboard</li>
+      </ul>
+      <p>
+        Your data is <strong>never</strong> used for advertising, profiling, analytics tools,
+        or shared with any third parties.
+      </p>
+
+      <h2>3. Data Security</h2>
+      <p>
+        All data is stored on our secure servers. Passwords are hashed using bcrypt;
+        plain-text passwords are never stored at any stage.
+        All communication between the app and our servers is encrypted via HTTPS.
+      </p>
+
+      <h2>4. Data Retention and Deletion</h2>
+      <p>
+        If you wish to delete your account and all associated data, please send a request
+        to the email address below. Requests are processed within 7 business days.
+      </p>
+
+      <h2>5. Third-Party Services</h2>
+      <p>
+        The app may include third-party components (such as Google Play Services) that have
+        their own privacy policies. This policy covers only Gravity Flip 3D's own data
+        practices.
+      </p>
+
+      <h2>6. Children's Privacy</h2>
+      <p>
+        Our app is not directed at children under the age of 13.
+        We do not knowingly collect data from children in this age group.
+      </p>
+
+      <h2>7. Changes to This Policy</h2>
+      <p>
+        We may update this page from time to time. You will be notified within the app
+        when significant changes occur. The current version will always be available here.
+      </p>
+
+      <h2>8. Contact</h2>
+      <p>For any questions or requests:</p>
+      <p>
+        <strong>Tomris Games</strong><br />
+        <a href="mailto:privacy@gravitygame.tomris.games">privacy@gravitygame.tomris.games</a><br />
+        <a href="https://gravitygame.tomris.games">gravitygame.tomris.games</a>
+      </p>
+
+      <hr />
+      <p style="font-size:13px; color: var(--muted);">
+        This privacy policy has been prepared in accordance with Google Play Store requirements.
+      </p>
+    </section>
+
+  </main>
+
+  <script>
+    const btns = document.querySelectorAll('.lang-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.lang;
+        btns.forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.lang-section').forEach(s => {
+          s.classList.toggle('visible', s.id === 'section-' + lang);
+        });
+        document.documentElement.lang = lang;
+      });
+    });
+  </script>
+</body>
+</html>
