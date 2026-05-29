@@ -5,7 +5,6 @@ const cors       = require('cors');
 
 const authRoutes        = require('./routes/auth');
 const leaderboardRoutes = require('./routes/leaderboard');
-const versionRoutes     = require('./routes/version');
 
 const app       = express();
 const PORT      = process.env.PORT      || 3001;
@@ -15,12 +14,20 @@ const ORIGIN    = process.env.ALLOWED_ORIGIN || 'https://gravitygame.tomris.game
 app.use(cors({ origin: ORIGIN, optionsSuccessStatus: 200 }));
 app.use(express.json({ limit: '10kb' }));
 
+// Request logger (temporary debug)
+app.use((req, _res, next) => {
+  if (req.path !== '/api/health') {
+    const auth = req.headers['authorization'] ? 'Bearer ***' : 'none';
+    console.log('[req] ' + req.method + ' ' + req.path + ' auth=' + auth);
+  }
+  next();
+});
+
 // Health check
 app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api',      leaderboardRoutes);
-app.use('/api',      versionRoutes);
 
 // Generic error handler
 app.use((err, _req, res, _next) => {

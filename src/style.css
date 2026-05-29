@@ -193,51 +193,71 @@ body {
   animation: flipBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Gravity indicator ───────────────────────────────── */
-#gravity-indicator {
+/* ── 4-Direction Gravity Indicators ──────────────────── */
+#gravity-dirs {
   position: fixed;
-  bottom: var(--safe-bottom);
-  left: var(--safe-left);
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.gdir {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  pointer-events: none;
-  z-index: 10;
-  padding-bottom: 4px;
-}
-
-#gravity-ring {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(91 140 255 / 0.07);
-  border: 1px solid var(--c-blue-border);
-  backdrop-filter: var(--blur-sm);
-  -webkit-backdrop-filter: var(--blur-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 0 18px rgba(91 140 255 / 0.12),
-    inset 0 1px 0 rgba(255 255 255 / 0.09);
-}
-
-#gravity-arrow {
-  font-size: 19px;
+  gap: 4px;
+  opacity: 0.22;
+  transition: opacity 0.25s ease, filter 0.25s ease;
   color: var(--c-blue);
-  text-shadow: 0 0 14px var(--c-blue-glow);
-  line-height: 1;
-  display: block;
-  transition: opacity 0.15s ease;
 }
 
-#gravity-label {
-  font-size: 7.5px;
+.gdir.active {
+  opacity: 1.0;
+  filter: drop-shadow(0 0 10px var(--c-blue));
+}
+
+.gdir-arrow-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gdir-label {
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 2.5px;
-  color: rgba(91 140 255 / 0.45);
+  letter-spacing: 2px;
   text-transform: uppercase;
+  color: inherit;
+}
+
+.gdir-up {
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+}
+
+.gdir-down {
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column-reverse;
+}
+
+.gdir-left {
+  left: 12px;
+  top: 42%;
+  transform: translateY(-50%);
+  flex-direction: row-reverse;
+  gap: 6px;
+}
+
+.gdir-right {
+  right: 12px;
+  top: 42%;
+  transform: translateY(-50%);
+  flex-direction: row;
+  gap: 6px;
 }
 
 /* ── Center message overlay ──────────────────────────── */

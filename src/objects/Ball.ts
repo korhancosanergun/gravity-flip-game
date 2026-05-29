@@ -9,6 +9,10 @@ export class Ball {
   private dead = false;
   private won  = false;
 
+  private readonly TRAIL_N = 16;
+  private trail: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial }[] = [];
+  private trailPos: THREE.Vector3[] = [];
+
   constructor(
     scene: THREE.Scene,
     physicsWorld: CANNON.World,
@@ -27,6 +31,20 @@ export class Ball {
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.castShadow = true;
     scene.add(this.mesh);
+
+    // Trail particles
+    const trailGeo = new THREE.SphereGeometry(BALL_RADIUS * 0.55, 6, 4);
+    for (let i = 0; i < this.TRAIL_N; i++) {
+      const tMat = new THREE.MeshBasicMaterial({
+        color:       i < this.TRAIL_N / 2 ? 0xff8800 : 0xff4400,
+        transparent: true,
+        opacity:     0,
+      });
+      const tMesh = new THREE.Mesh(trailGeo, tMat);
+      tMesh.visible = false;
+      scene.add(tMesh);
+      this.trail.push({ mesh: tMesh, mat: tMat });
+    }
 
     // Point light attached to ball for glow effect
     const ballLight = new THREE.PointLight(0xff8800, 0.6, 8);
@@ -70,14 +88,42 @@ export class Ball {
     );
 
     // Constrain ball to the XY plane (prevent Z drift)
-    this.body.position.z      = 0;
-    this.body.velocity.z      = 0;
+    this.body.position.z        = 0;
+    this.body.velocity.z        = 0;
     this.body.angularVelocity.x = 0;
     this.body.angularVelocity.y = 0;
+
+    // Update trail
+    const pos = new THREE.Vector3(
+      this.body.position.x,
+      this.body.position.y,
+      0,
+    );
+    this.trailPos.unshift(pos);
+    if (this.trailPos.length > this.TRAIL_N) this.trailPos.pop();
+
+    for (let i = 0; i < this.TRAIL_N; i++) {
+      const t = this.trail[i];
+      if (i < this.trailPos.length) {
+        t.mesh.position.copy(this.trailPos[i]);
+        const frac    = 1 - i / this.TRAIL_N;
+        t.mat.opacity = frac * 0.70;
+        t.mesh.scale.setScalar(frac * 0.85 + 0.15);
+        t.mesh.visible = true;
+      } else {
+        t.mesh.visible = false;
+      }
+    }
   }
 
   removeFrom(scene: THREE.Scene, physicsWorld: CANNON.World): void {
     if (this.mesh.parent) scene.remove(this.mesh);
+    for (const t of this.trail) {
+      if (t.mesh.parent) scene.remove(t.mesh);
+      t.mat.dispose();
+    }
+    this.trail    = [];
+    this.trailPos = [];
     physicsWorld.removeBody(this.body);
   }
 }

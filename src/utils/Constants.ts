@@ -1,6 +1,7 @@
-export const TILE_SIZE   = 2;
-export const TILE_DEPTH  = 0.35;   // thin slab aesthetic
-export const BALL_RADIUS = 0.45;
+export const TILE_SIZE         = 2;
+export const TILE_DEPTH        = 0.35;  // physics collision slab thickness
+export const TILE_VISUAL_DEPTH = 1.8;   // 3D cube visual depth (isometric)
+export const BALL_RADIUS       = 0.45;
 
 export const GRAVITY_STRENGTH   = 25;
 export const FLIP_LERP_SPEED    = 5;   // camera-up lerp speed (rad/s feel)

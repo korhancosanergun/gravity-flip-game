@@ -1,33 +1,24 @@
 const router         = require('express').Router();
+const mongoose       = require('mongoose');
 const Score          = require('../models/Score');
 const authMiddleware = require('../middleware/auth');
 
-// GET /api/leaderboard — top 20 best scores (one per user)
+// GET /api/leaderboard — top 20 best scores (one per user, enforced by DB unique index)
 router.get('/leaderboard', async (_req, res) => {
   try {
-    // Fetch more than needed so we can deduplicate by user
     const scores = await Score
       .find()
       .sort({ levelsCompleted: -1, totalFlips: 1 })
-      .limit(200)
+      .limit(20)
       .lean();
 
-    const seen = new Set();
-    const top  = [];
-    for (const s of scores) {
-      const key = s.userId.toString();
-      if (!seen.has(key)) {
-        seen.add(key);
-        top.push({
-          rank:            top.length + 1,
-          username:        s.username,
-          levelsCompleted: s.levelsCompleted,
-          totalFlips:      s.totalFlips,
-          completedAt:     s.completedAt,
-        });
-        if (top.length >= 20) break;
-      }
-    }
+    const top = scores.map((s, i) => ({
+      rank:            i + 1,
+      username:        s.username,
+      levelsCompleted: s.levelsCompleted,
+      totalFlips:      s.totalFlips,
+      completedAt:     s.completedAt,
+    }));
 
     res.json(top);
   } catch (err) {
@@ -36,7 +27,7 @@ router.get('/leaderboard', async (_req, res) => {
   }
 });
 
-// POST /api/score — authenticated; saves a completed run
+// POST /api/score — authenticated; upserts best score per user
 router.post('/score', authMiddleware, async (req, res) => {
   try {
     const { levelsCompleted, totalFlips } = req.body ?? {};
@@ -47,12 +38,45 @@ router.post('/score', authMiddleware, async (req, res) => {
     if (levelsCompleted < 0 || levelsCompleted > 100 || totalFlips < 0 || totalFlips > 99999)
       return res.status(400).json({ error: 'Score data out of range' });
 
-    await Score.create({
-      userId:          req.user.id,
-      username:        req.user.username,
-      levelsCompleted: Math.floor(levelsCompleted),
-      totalFlips:      Math.floor(totalFlips),
-    });
+    const lc = Math.floor(levelsCompleted);
+    const tf = Math.floor(totalFlips);
+
+    // Explicitly cast to ObjectId so findOne works regardless of JWT id type
+    let uid;
+    try { uid = new mongoose.Types.ObjectId(req.user.id); }
+    catch { return res.status(400).json({ error: 'Invalid user id' }); }
+
+    // Fetch existing record for this user (best one if somehow dupes exist)
+    const existing = await Score.findOne({ userId: uid }).sort({ levelsCompleted: -1 });
+    console.log(`[score] user=${req.user.username} lc=${lc} tf=${tf} existing=${existing ? `lc:${existing.levelsCompleted} tf:${existing.totalFlips}` : 'none'}`);
+
+    if (!existing) {
+      // First submission — create
+      await Score.create({
+        userId: uid,
+        username: req.user.username,
+        levelsCompleted: lc,
+        totalFlips: tf,
+      });
+      console.log(`[score] created new record for ${req.user.username}`);
+    } else {
+      // Update only if this run is strictly better:
+      // more levels completed, OR same levels with fewer flips
+      const isBetter =
+        lc > existing.levelsCompleted ||
+        (lc === existing.levelsCompleted && tf < existing.totalFlips);
+
+      if (isBetter) {
+        existing.levelsCompleted = lc;
+        existing.totalFlips      = tf;
+        existing.username        = req.user.username; // keep username in sync
+        existing.completedAt     = new Date();
+        await existing.save();
+        console.log(`[score] updated ${req.user.username} → lc=${lc} tf=${tf}`);
+      } else {
+        console.log(`[score] not better, skipped for ${req.user.username}`);
+      }
+    }
 
     res.json({ ok: true });
   } catch (err) {

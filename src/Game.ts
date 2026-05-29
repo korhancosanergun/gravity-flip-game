@@ -71,7 +71,7 @@ export class Game {
     const onStatus: StatusCallback = (status, flips, level) =>
       this.updateHUD(status, flips, level);
 
-    this.gameScene = new GameScene(aspect, onStatus, controlMode);
+    this.gameScene = new GameScene(aspect, onStatus, controlMode, this.renderer.domElement);
 
     // ── Events ────────────────────────────────────────────
     window.addEventListener('resize', () => this.onResize());

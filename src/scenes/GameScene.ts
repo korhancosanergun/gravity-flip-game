@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PhysicsWorld }  from '../systems/PhysicsWorld';
 import { GravitySystem } from '../systems/GravitySystem';
 import { InputManager } from '../systems/InputManager';
@@ -7,7 +8,7 @@ import { LevelManager } from '../systems/LevelManager';
 import type { LevelBounds } from '../systems/LevelManager';
 import { Ball }          from '../objects/Ball';
 import type { GravityDirection, GameStatus } from '../utils/Types';
-import { FLIP_LERP_SPEED, OUT_OF_BOUNDS_MARGIN, CAMERA_FOV } from '../utils/Constants';
+import { OUT_OF_BOUNDS_MARGIN, CAMERA_FOV, TILE_VISUAL_DEPTH } from '../utils/Constants';
 
 export type StatusCallback = (status: GameStatus, flips: number, levelNum: number) => void;
 
@@ -20,6 +21,7 @@ export class GameScene {
   private levelManager:  LevelManager;
   private ball:          Ball | null = null;
   private bounds:        LevelBounds | null = null;
+  private controls:      OrbitControls;
 
   private timer           = new THREE.Timer();
   private elapsed         = 0;
@@ -32,7 +34,7 @@ export class GameScene {
   private controlMode: ControlMode;
   private aspect: number;
 
-  constructor(aspect: number, onStatus: StatusCallback, controlMode: ControlMode = 'touch') {
+  constructor(aspect: number, onStatus: StatusCallback, controlMode: ControlMode = 'touch', canvas?: HTMLElement) {
     this.onStatus    = onStatus;
     this.controlMode = controlMode;
     this.aspect      = aspect;
@@ -45,18 +47,22 @@ export class GameScene {
     // ── Camera ───────────────────────────────────────────────
     this.camera = new THREE.PerspectiveCamera(55, aspect, 0.1, 300);
 
-    // ── Lighting ─────────────────────────────────────────────
-    this.scene.add(new THREE.AmbientLight(0x304060, 1.0));
+    // ── Lighting (isometric 3-point setup) ─────────────────────
+    this.scene.add(new THREE.AmbientLight(0x2a3a5a, 1.8));
 
-    const dir = new THREE.DirectionalLight(0xffffff, 1.4);
-    dir.position.set(6, 12, 18);
-    dir.castShadow = true;
-    dir.shadow.mapSize.set(1024, 1024);
-    this.scene.add(dir);
+    const keyLight = new THREE.DirectionalLight(0xaaccff, 2.2);
+    keyLight.position.set(10, 12, 16);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    this.scene.add(keyLight);
 
-    const fill = new THREE.DirectionalLight(0x4466aa, 0.4);
-    fill.position.set(-8, -4, 6);
-    this.scene.add(fill);
+    const fillLight = new THREE.DirectionalLight(0x3355aa, 0.7);
+    fillLight.position.set(-8, 2, 6);
+    this.scene.add(fillLight);
+
+    const backLight = new THREE.DirectionalLight(0x112244, 0.35);
+    backLight.position.set(0, -10, -6);
+    this.scene.add(backLight);
 
     // ── Stars (background particles) ─────────────────────────
     this.buildStarField();
@@ -66,6 +72,16 @@ export class GameScene {
     this.gravity       = new GravitySystem(this.physics);
     this.levelManager  = new LevelManager(this.scene, this.physics.world);
     new InputManager((dir: GravityDirection) => this.onFlip(dir), this.controlMode);
+
+    // ── Orbital camera controls ───────────────────────────────
+    this.controls = new OrbitControls(this.camera, canvas ?? document.body);
+    this.controls.enableDamping    = true;
+    this.controls.dampingFactor    = 0.08;
+    this.controls.enablePan        = false;
+    this.controls.minDistance      = 4;
+    this.controls.maxDistance      = 60;
+    this.controls.rotateSpeed      = 0.55;
+    this.controls.zoomSpeed        = 0.80;
 
     this.loadLevel(0);
   }
@@ -103,11 +119,10 @@ export class GameScene {
   }
 
   private positionCamera(b: LevelBounds): void {
-    let lookY = b.centerY;
+    let targetY = b.centerY;
 
     if (this.controlMode === 'touch') {
-      // Center the level in the visible game area (between HUD bottom and D-pad top)
-      // so it doesn't sit behind the D-pad overlay.
+      // Center level in the visible game area (between HUD bottom and D-pad top)
       const screenH  = window.innerHeight;
       const hudEl    = document.getElementById('hud');
       const ctrlEl   = document.getElementById('touch-controls');
@@ -115,18 +130,23 @@ export class GameScene {
       const ctrlRect = ctrlEl ? ctrlEl.getBoundingClientRect() : null;
       const ctrlTop  = (ctrlRect && ctrlRect.height > 0) ? ctrlRect.top : screenH - 190;
       const effectiveCenterPx = (hudBot + ctrlTop) / 2;
-      const pixelShift = (screenH / 2) - effectiveCenterPx; // + means effective center is above screen center
+      const pixelShift = (screenH / 2) - effectiveCenterPx;
       const tanHalf  = Math.tan((CAMERA_FOV * Math.PI / 180) / 2);
       const worldH   = 2 * b.cameraZ * tanHalf;
-      // Shift lookAt DOWN (negative Y) so the level drifts UP on screen into the game area.
-      lookY = b.centerY - (pixelShift / screenH) * worldH;
+      targetY = b.centerY - (pixelShift / screenH) * worldH;
     }
 
-    this.camera.position.set(b.centerX, lookY, b.cameraZ);
+    // Fixed isometric camera — reset on each level load
+    const d = b.cameraZ;
+    this.camera.position.set(
+      b.centerX + d * 0.45,
+      targetY   + d * 0.30,
+      d * 0.80,
+    );
     this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(b.centerX, lookY, 0);
-    this.gravity.currentCameraUp.set(0, 1, 0);
-    this.gravity.targetCameraUp.set(0, 1, 0);
+    // OrbitControls target = level center
+    this.controls.target.set(b.centerX, targetY, -TILE_VISUAL_DEPTH / 2);
+    this.controls.update();
   }
 
   // ── Gravity flip ─────────────────────────────────────────
@@ -190,12 +210,8 @@ export class GameScene {
     // Level tile animations
     this.levelManager.update(this.elapsed);
 
-    // Smooth camera rotation (gravity flip effect)
-    this.gravity.update(dt, FLIP_LERP_SPEED);
-    this.camera.up.copy(this.gravity.currentCameraUp);
-    if (this.bounds) {
-      this.camera.lookAt(this.bounds.centerX, this.bounds.centerY, 0);
-    }
+    // Orbital camera damping
+    this.controls.update();
   }
 
   resize(aspect: number): void {

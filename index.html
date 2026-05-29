@@ -268,12 +268,24 @@
       </div>
     </header>
 
-    <!-- ── Gravity indicator (bottom-left) ──────── -->
-    <div id="gravity-indicator">
-      <div id="gravity-ring">
-        <div id="gravity-arrow">↓</div>
+    <!-- ── 4-Direction gravity indicators ─────── -->
+    <div id="gravity-dirs" aria-hidden="true">
+      <div class="gdir gdir-up" id="gdir-up">
+        <svg class="gdir-arrow-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="gdir-label" data-i18n="gravityUp">YUKARI</span>
       </div>
-      <span id="gravity-label">DOWN</span>
+      <div class="gdir gdir-down" id="gdir-down">
+        <svg class="gdir-arrow-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="gdir-label" data-i18n="gravityDown">AŞAĞI</span>
+      </div>
+      <div class="gdir gdir-left" id="gdir-left">
+        <svg class="gdir-arrow-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="gdir-label" data-i18n="gravityLeft">SOL</span>
+      </div>
+      <div class="gdir gdir-right" id="gdir-right">
+        <svg class="gdir-arrow-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="gdir-label" data-i18n="gravityRight">SAĞ</span>
+      </div>
     </div>
 
     <!-- ── Center message overlay ────────────────── -->
